@@ -6,198 +6,101 @@
   <title>Church Visit Log</title>
   <style>
     body {
-      font-family: "Poppins", sans-serif;
+      font-family: Arial, sans-serif;
       background: url('https://raw.githubusercontent.com/philipdeddi/church-log/87098c24feccf818ba78770428b6e1a95f98928c/IMG_1787.JPG') no-repeat center center fixed;
       background-size: cover;
-      color: #333;
-      margin: 0;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      backdrop-filter: blur(5px);
-    }
-
-    main {
-      display: flex;
-      flex: 1;
+      align-items: center;
       padding: 20px;
-      gap: 20px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    /* Left column (input) */
-    .left-column {
-      background: rgba(255, 255, 255, 0.9);
-      padding: 16px;
-      border-radius: 16px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      flex: 1;
-      min-width: 250px;
-      height: fit-content;
-    }
-
-    /* Right column (display) */
-    .right-column {
-      background: rgba(255, 255, 255, 0.9);
-      padding: 16px;
-      border-radius: 16px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      flex: 2;
-      display: flex;
-      flex-direction: column;
+      color: #fff;
+      backdrop-filter: blur(3px);
     }
 
     h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-top: 20px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
     }
 
     form {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      width: 320px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
     }
 
     input {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #000;
     }
 
     button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 10px;
+      background: #4CAF50;
+      color: #fff;
+      font-weight: bold;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #0056b3;
+      background: #45a049;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .section {
-      margin-bottom: 20px;
-    }
-
-    .count {
-      font-weight: bold;
-      text-align: center;
-      color: #444;
-    }
-
-    .scrollable {
-      flex: 1;
-      overflow-y: auto;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
+    #message {
       margin-top: 10px;
-    }
-
-    li {
-      margin: 6px 0;
-    }
-
-    @media (max-width: 768px) {
-      main {
-        flex-direction: column;
-      }
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Church Visit Log ✝️</h1>
 
-  <main>
-    <div class="left-column">
-      <h3>Add New Visit</h3>
-      <form id="visitForm">
-        <input type="text" id="churchName" placeholder="Church Name" required />
-        <input type="date" id="date" placeholder="Date (optional)" />
-        <input type="text" id="location" placeholder="Location" required />
-        <button type="submit">Add Visit</button>
-      </form>
-    </div>
+  <h1>Church Visit Log</h1>
 
-    <div class="right-column">
-      <div class="section">
-        <h3>Here are the latest 3 churches you've visited together!</h3>
-        <ul id="latest-churches"></ul>
-      </div>
-      <div class="section count" id="visit-count"></div>
-      <div class="scrollable" id="all-churches"></div>
-    </div>
-  </main>
+  <form id="visitForm">
+    <input type="text" id="churchName" placeholder="Church Name" />
+    <input type="date" id="visitDate" placeholder="Visit Date" />
+    <input type="text" id="location" placeholder="Location" />
+    <button type="submit">Add Visit</button>
+  </form>
+
+  <div id="message"></div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6deyIVr6Mr0iBVfyqCUIoCOIDPKuel1qCH_qi86kCxokdpxWkoGVtjLlhP799_GBmvw/exec"; // Replace this
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6CXNrXKONicDLQhobpokoF4gG8I2PahVcSuRWX-k6RTKkEoMQXKeKtvH22dNu7NQr/exec";
 
-    const emojis = ["🙏", "💒", "🌅", "🌿", "⛪", "✨", "❤️"];
-
-    async function fetchVisits() {
-      const res = await fetch(SCRIPT_URL);
-      const data = await res.json();
-      data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      // Latest 3
-      const latest = data.slice(0, 3);
-      const latestList = document.getElementById("latest-churches");
-      latestList.innerHTML = "";
-      latest.forEach(item => {
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const li = document.createElement("li");
-        li.textContent = `${emoji} ${item.churchName} (${item.date}) – ${item.location}`;
-        latestList.appendChild(li);
-      });
-
-      // Count
-      document.getElementById("visit-count").textContent = 
-        `You have visited ${data.length} churches so far 🙌`;
-
-      // All churches (scrollable)
-      const allList = document.getElementById("all-churches");
-      allList.innerHTML = "<h4>All Visited Churches</h4><ul></ul>";
-      const ul = allList.querySelector("ul");
-      data.forEach(item => {
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const li = document.createElement("li");
-        li.textContent = `${emoji} ${item.churchName} (${item.date}) – ${item.location}`;
-        ul.appendChild(li);
-      });
-    }
-
-    document.getElementById("visitForm").addEventListener("submit", async e => {
+    document.getElementById("visitForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const churchName = document.getElementById("churchName").value;
-      const dateInput = document.getElementById("date").value;
-      const location = document.getElementById("location").value;
 
-      // If date is empty, use today’s date
-      const today = new Date();
-      const formattedToday = today.toISOString().split("T")[0];
-      const date = dateInput || formattedToday;
+      const churchName = document.getElementById("churchName").value.trim();
+      const visitDate = document.getElementById("visitDate").value.trim();
+      const location = document.getElementById("location").value.trim();
 
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ churchName, date, location })
-      });
+      const data = { churchName, visitDate, location };
 
-      e.target.reset();
-      fetchVisits();
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        document.getElementById("message").innerText = "✅ Visit added!";
+        document.getElementById("visitForm").reset();
+
+      } catch (error) {
+        console.error(error);
+        document.getElementById("message").innerText = "❌ Error adding visit.";
+      }
     });
-
-    fetchVisits();
   </script>
 </body>
 </html>
