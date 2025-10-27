@@ -6,36 +6,67 @@
   <title>Church Visit Log</title>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f8f9fa;
+      font-family: "Poppins", sans-serif;
+      background: url('https://images.unsplash.com/photo-1529680459049-bf0340fa0755?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
       color: #333;
       margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      backdrop-filter: blur(5px);
+    }
+
+    main {
+      display: flex;
+      flex: 1;
       padding: 20px;
-      max-width: 600px;
-      margin-inline: auto;
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
     }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    .card {
-      background: white;
+
+    /* Left column (input) */
+    .left-column {
+      background: rgba(255, 255, 255, 0.9);
       padding: 16px;
       border-radius: 16px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      margin-bottom: 16px;
+      flex: 1;
+      min-width: 250px;
+      height: fit-content;
     }
+
+    /* Right column (display) */
+    .right-column {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-top: 20px;
+    }
+
     form {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+
     input {
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 10px;
       font-size: 16px;
     }
+
     button {
       background-color: #007bff;
       color: white;
@@ -45,60 +76,105 @@
       border-radius: 10px;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #0056b3;
     }
+
     ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
     .count {
-      text-align: center;
       font-weight: bold;
-      color: #555;
+      text-align: center;
+      color: #444;
+    }
+
+    .scrollable {
+      flex: 1;
+      overflow-y: auto;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
       margin-top: 10px;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Church Visit Log ✝️</h1>
-  
-  <div class="card">
-    <h3>Here are the latest 3 churches you've visited together!</h3>
-    <ul id="latest-churches"></ul>
-    <div class="count" id="visit-count"></div>
-  </div>
 
-  <div class="card">
-    <h3>Add New Visit</h3>
-    <form id="visitForm">
-      <input type="text" id="churchName" placeholder="Church Name" required />
-      <input type="date" id="date" required />
-      <input type="text" id="location" placeholder="Location" required />
-      <button type="submit">Add Visit</button>
-    </form>
-  </div>
+  <main>
+    <div class="left-column">
+      <h3>Add New Visit</h3>
+      <form id="visitForm">
+        <input type="text" id="churchName" placeholder="Church Name" required />
+        <input type="date" id="date" required />
+        <input type="text" id="location" placeholder="Location" required />
+        <button type="submit">Add Visit</button>
+      </form>
+    </div>
+
+    <div class="right-column">
+      <div class="section">
+        <h3>Here are the latest 3 churches you've visited together!</h3>
+        <ul id="latest-churches"></ul>
+      </div>
+      <div class="section count" id="visit-count"></div>
+      <div class="scrollable" id="all-churches"></div>
+    </div>
+  </main>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6deyIVr6Mr0iBVfyqCUIoCOIDPKuel1qCH_qi86kCxokdpxWkoGVtjLlhP799_GBmvw/exec"; // Replace this!
+    const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL"; // Replace this
 
-    const emojis = ["🙏", "🌅", "💒", "🌿", "⛪", "✨", "❤️"];
+    const emojis = ["🙏", "💒", "🌅", "🌿", "⛪", "✨", "❤️"];
 
     async function fetchVisits() {
       const res = await fetch(SCRIPT_URL);
       const data = await res.json();
       data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // Latest 3
       const latest = data.slice(0, 3);
-      const list = document.getElementById("latest-churches");
-      list.innerHTML = "";
+      const latestList = document.getElementById("latest-churches");
+      latestList.innerHTML = "";
       latest.forEach(item => {
         const emoji = emojis[Math.floor(Math.random() * emojis.length)];
         const li = document.createElement("li");
         li.textContent = `${emoji} ${item.churchName} (${item.date}) – ${item.location}`;
-        list.appendChild(li);
+        latestList.appendChild(li);
       });
+
+      // Count
       document.getElementById("visit-count").textContent = 
-        `You've visited ${data.length} churches so far 🙌`;
+        `You have visited ${data.length} churches so far 🙌`;
+
+      // All churches (scrollable)
+      const allList = document.getElementById("all-churches");
+      allList.innerHTML = "<h4>All Visited Churches</h4><ul></ul>";
+      const ul = allList.querySelector("ul");
+      data.forEach(item => {
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        const li = document.createElement("li");
+        li.textContent = `${emoji} ${item.churchName} (${item.date}) – ${item.location}`;
+        ul.appendChild(li);
+      });
     }
 
     document.getElementById("visitForm").addEventListener("submit", async e => {
