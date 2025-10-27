@@ -176,69 +176,75 @@
     </div>
   </div>
 
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6CXNrXKONicDLQhobpokoF4gG8I2PahVcSuRWX-k6RTKkEoMQXKeKtvH22dNu7NQr/exec";
+ <script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6CXNrXKONicDLQhobpokoF4gG8I2PahVcSuRWX-k6RTKkEoMQXKeKtvH22dNu7NQr/exec";
+  const emojis = ["⛪", "🙏", "🌿", "✨", "🕊️", "💒"];
 
-    async function loadVisits() {
-      try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
-        const visits = data.reverse(); // newest first
+  async function loadVisits() {
+    try {
+      const res = await fetch(SCRIPT_URL);
+      const data = await res.json();
+      const visits = data.reverse(); // newest first
 
-        // Total count
-        document.getElementById("visitCount").innerText = visits.length;
+      // Total count
+      document.getElementById("visitCount").innerText = visits.length;
 
-        // Latest 3 visits
-        const latest = visits.slice(0, 3);
-        const latestList = document.getElementById("latestVisits");
-        latestList.innerHTML = "";
-        const emojis = ["⛪", "🙏", "🌿", "✨", "🕊️", "💒"];
-        latest.forEach(v => {
-          const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-          latestList.innerHTML += `<li>${emoji} ${v[1]} (${v[3] || "Unknown location"})</li>`;
-        });
+      // Latest 3 visits
+      const latest = visits.slice(0, 3);
+      const latestList = document.getElementById("latestVisits");
+      latestList.innerHTML = "";
+      latest.forEach(v => {
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        const name = v.churchName || "Unknown church";
+        const date = v.visitDate || "No date";
+        const loc = v.location || "Unknown location";
+        latestList.innerHTML += `<li>${emoji} ${name} (${date}) – ${loc}</li>`;
+      });
 
-        // All visits list
-        const allList = document.getElementById("allVisits");
-        allList.innerHTML = "";
-        visits.forEach(v => {
-          allList.innerHTML += `<li>${v[1]} - ${v[2] || "No date"} (${v[3] || "Unknown location"})</li>`;
-        });
+      // All visits
+      const allList = document.getElementById("allVisits");
+      allList.innerHTML = "";
+      visits.forEach(v => {
+        const name = v.churchName || "Unknown church";
+        const date = v.visitDate || "No date";
+        const loc = v.location || "Unknown location";
+        allList.innerHTML += `<li>${name} - ${date} (${loc})</li>`;
+      });
 
-      } catch (error) {
-        console.error("Error loading visits:", error);
-      }
+    } catch (error) {
+      console.error("Error loading visits:", error);
     }
+  }
 
-    document.getElementById("visitForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+  document.getElementById("visitForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const churchName = document.getElementById("churchName").value.trim();
-      const visitDate = document.getElementById("visitDate").value.trim();
-      const location = document.getElementById("location").value.trim();
+    const churchName = document.getElementById("churchName").value.trim();
+    const visitDate = document.getElementById("visitDate").value.trim();
+    const location = document.getElementById("location").value.trim();
 
-      const data = { churchName, visitDate, location };
+    const data = { churchName, visitDate, location };
 
-      try {
-        await fetch(SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
+    try {
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-        alert("✅ Visit added!");
-        document.getElementById("visitForm").reset();
-        window.location.reload();
+      alert("✅ Visit added!");
+      document.getElementById("visitForm").reset();
+      window.location.reload();
 
-      } catch (error) {
-        console.error(error);
-        alert("❌ Error adding visit.");
-      }
-    });
+    } catch (error) {
+      console.error(error);
+      alert("❌ Error adding visit.");
+    }
+  });
 
-    // Load data on start
-    loadVisits();
-  </script>
+  loadVisits();
+</script>
+
 </body>
 </html>
