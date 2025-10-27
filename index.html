@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: "Poppins", sans-serif;
-      background: url('https://github.com/philipdeddi/church-log/blob/4172e0ab886412cdf29f8aea22c0c116af2539d0/IMG_1787.JPG') no-repeat center center fixed;
+      background: url('https://images.unsplash.com/photo-1529680459049-bf0340fa0755?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
       background-size: cover;
       color: #333;
       margin: 0;
@@ -124,7 +124,7 @@
       <h3>Add New Visit</h3>
       <form id="visitForm">
         <input type="text" id="churchName" placeholder="Church Name" required />
-        <input type="date" id="date" required />
+        <input type="date" id="date" placeholder="Date (optional)" />
         <input type="text" id="location" placeholder="Location" required />
         <button type="submit">Add Visit</button>
       </form>
@@ -180,12 +180,19 @@
     document.getElementById("visitForm").addEventListener("submit", async e => {
       e.preventDefault();
       const churchName = document.getElementById("churchName").value;
-      const date = document.getElementById("date").value;
+      const dateInput = document.getElementById("date").value;
       const location = document.getElementById("location").value;
+
+      // If date is empty, use today’s date
+      const today = new Date();
+      const formattedToday = today.toISOString().split("T")[0];
+      const date = dateInput || formattedToday;
+
       await fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({ churchName, date, location })
       });
+
       e.target.reset();
       fetchVisits();
     });
