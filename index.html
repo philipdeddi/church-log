@@ -12,8 +12,9 @@
     body {
       margin: 0;
       font-family: "Poppins", sans-serif;
-      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)),
-        url("https://raw.githubusercontent.com/philipdeddi/church-log/87098c24feccf818ba78770428b6e1a95f98928c/IMG_1787.JPG") no-repeat center center fixed;
+      background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.75)),
+        url("https://raw.githubusercontent.com/philipdeddi/church-log/87098c24feccf818ba78770428b6e1a95f98928c/IMG_1787.JPG") 
+        no-repeat center center fixed;
       background-size: cover;
       color: white;
       min-height: 100vh;
@@ -70,6 +71,11 @@
 
     input:focus {
       box-shadow: 0 0 0 2px #4caf50;
+    }
+
+    input[type="date"] {
+      font-size: 0.95rem;
+      height: 42px;
     }
 
     button {
@@ -134,6 +140,22 @@
       min-height: 24px;
     }
 
+    .toggle-btn {
+      background: #2196f3;
+      color: white;
+      font-size: 0.9rem;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      align-self: flex-end;
+    }
+
+    .toggle-btn:hover {
+      background: #1976d2;
+    }
+
     @media (max-width: 768px) {
       body {
         padding: 10px;
@@ -170,81 +192,87 @@
       </div>
 
       <div class="section">
-        <h3>All Visits</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3>All Visits</h3>
+          <button class="toggle-btn" onclick="toggleSort()">Sort: <span id="sortOrder">Newest → Oldest</span></button>
+        </div>
         <ul id="allVisits"></ul>
       </div>
     </div>
   </div>
 
- <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6CXNrXKONicDLQhobpokoF4gG8I2PahVcSuRWX-k6RTKkEoMQXKeKtvH22dNu7NQr/exec";
-  const emojis = ["⛪", "🙏", "🌿", "✨", "🕊️", "💒"];
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6CXNrXKONicDLQhobpokoF4gG8I2PahVcSuRWX-k6RTKkEoMQXKeKtvH22dNu7NQr/exec";
+    const emojis = ["⛪", "🙏", "🌿", "✨", "🕊️", "💒"];
+    let visits = [];
+    let newestFirst = true;
 
-  async function loadVisits() {
-    try {
-      const res = await fetch(SCRIPT_URL);
-      const data = await res.json();
-      const visits = data.reverse(); // newest first
+    async function loadVisits() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        visits = data;
+        renderVisits();
+      } catch (error) {
+        console.error("Error loading visits:", error);
+      }
+    }
 
-      // Total count
-      document.getElementById("visitCount").innerText = visits.length;
-
-      // Latest 3 visits
-      const latest = visits.slice(0, 3);
+    function renderVisits() {
+      const visitCount = document.getElementById("visitCount");
       const latestList = document.getElementById("latestVisits");
-      latestList.innerHTML = "";
-      latest.forEach(v => {
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const name = v.churchName || "Unknown church";
-        const date = v.visitDate || "No date";
-        const loc = v.location || "Unknown location";
-        latestList.innerHTML += `<li>${emoji} ${name} (${date}) – ${loc}</li>`;
-      });
-
-      // All visits
       const allList = document.getElementById("allVisits");
-      allList.innerHTML = "";
-      visits.forEach(v => {
-        const name = v.churchName || "Unknown church";
-        const date = v.visitDate || "No date";
-        const loc = v.location || "Unknown location";
-        allList.innerHTML += `<li>${name} - ${date} (${loc})</li>`;
-      });
+      const sortOrderLabel = document.getElementById("sortOrder");
 
-    } catch (error) {
-      console.error("Error loading visits:", error);
+      const sorted = newestFirst ? [...visits].reverse() : [...visits];
+      visitCount.innerText = visits.length;
+
+      // Latest 3 (always newest first)
+      const latest = [...visits].reverse().slice(0, 3);
+      latestList.innerHTML = latest.map(v => {
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        return `<li>${emoji} ${v.churchName || "Unknown church"} (${v.visitDate || "No date"}) – ${v.location || "Unknown location"}</li>`;
+      }).join("");
+
+      // All visits (numbered)
+      allList.innerHTML = sorted.map((v, i) => {
+        return `<li><strong>${i + 1}.</strong> ${v.churchName || "Unknown church"} - ${v.visitDate || "No date"} (${v.location || "Unknown location"})</li>`;
+      }).join("");
+
+      sortOrderLabel.textContent = newestFirst ? "Newest → Oldest" : "Oldest → Newest";
     }
-  }
 
-  document.getElementById("visitForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const churchName = document.getElementById("churchName").value.trim();
-    const visitDate = document.getElementById("visitDate").value.trim();
-    const location = document.getElementById("location").value.trim();
-
-    const data = { churchName, visitDate, location };
-
-    try {
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      alert("✅ Visit added!");
-      document.getElementById("visitForm").reset();
-      window.location.reload();
-
-    } catch (error) {
-      console.error(error);
-      alert("❌ Error adding visit.");
+    function toggleSort() {
+      newestFirst = !newestFirst;
+      renderVisits();
     }
-  });
 
-  loadVisits();
-</script>
+    document.getElementById("visitForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const churchName = document.getElementById("churchName").value.trim();
+      const visitDate = document.getElementById("visitDate").value.trim();
+      const location = document.getElementById("location").value.trim();
 
+      const data = { churchName, visitDate, location };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        alert("✅ Visit added!");
+        document.getElementById("visitForm").reset();
+        window.location.reload();
+      } catch (error) {
+        console.error(error);
+        alert("❌ Error adding visit.");
+      }
+    });
+
+    loadVisits();
+  </script>
 </body>
 </html>
