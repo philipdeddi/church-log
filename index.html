@@ -13,8 +13,7 @@
       margin: 0;
       font-family: "Poppins", sans-serif;
       background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.75)),
-        url("https://raw.githubusercontent.com/philipdeddi/church-log/87098c24feccf818ba78770428b6e1a95f98928c/IMG_1787.JPG") 
-        no-repeat center center fixed;
+        url("https://raw.githubusercontent.com/philipdeddi/church-log/87098c24feccf818ba78770428b6e1a95f98928c/IMG_1787.JPG") no-repeat center center fixed;
       background-size: cover;
       color: white;
       min-height: 100vh;
@@ -23,6 +22,7 @@
       align-items: flex-start;
       padding: 20px;
       gap: 20px;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
     }
 
     .container {
@@ -56,7 +56,7 @@
     input,
     button {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       margin: 8px 0;
       border: none;
       border-radius: 8px;
@@ -69,13 +69,13 @@
       outline: none;
     }
 
-    input:focus {
-      box-shadow: 0 0 0 2px #4caf50;
+    input[type="date"] {
+      font-size: 0.9rem;
+      padding: 8px;
     }
 
-    input[type="date"] {
-      font-size: 0.95rem;
-      height: 42px;
+    input:focus {
+      box-shadow: 0 0 0 2px #4caf50;
     }
 
     button {
@@ -110,7 +110,7 @@
     .section h3 {
       font-size: 1.2rem;
       margin-bottom: 10px;
-      text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+      text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
     }
 
     ul {
@@ -140,20 +140,24 @@
       min-height: 24px;
     }
 
-    .toggle-btn {
-      background: #2196f3;
-      color: white;
-      font-size: 0.9rem;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    .sort-buttons {
+      display: flex;
+      justify-content: flex-end;
       margin-bottom: 10px;
-      align-self: flex-end;
+      gap: 10px;
     }
 
-    .toggle-btn:hover {
-      background: #1976d2;
+    .sort-buttons button {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .sort-buttons button:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
 
     @media (max-width: 768px) {
@@ -162,6 +166,9 @@
       }
       .container {
         flex-direction: column;
+      }
+      input[type="date"] {
+        font-size: 0.85rem;
       }
     }
   </style>
@@ -192,10 +199,11 @@
       </div>
 
       <div class="section">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h3>All Visits</h3>
-          <button class="toggle-btn" onclick="toggleSort()">Sort: <span id="sortOrder">Newest → Oldest</span></button>
+        <div class="sort-buttons">
+          <button id="sortNewest">Newest → Oldest</button>
+          <button id="sortOldest">Oldest → Newest</button>
         </div>
+        <h3>All Visits</h3>
         <ul id="allVisits"></ul>
       </div>
     </div>
@@ -205,50 +213,57 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6CXNrXKONicDLQhobpokoF4gG8I2PahVcSuRWX-k6RTKkEoMQXKeKtvH22dNu7NQr/exec";
     const emojis = ["⛪", "🙏", "🌿", "✨", "🕊️", "💒"];
     let visits = [];
-    let newestFirst = true;
 
     async function loadVisits() {
       try {
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
-        visits = data;
-        renderVisits();
+        visits = data.reverse(); // newest first by default
+
+        document.getElementById("visitCount").innerText = visits.length;
+
+        renderLatest();
+        renderAll(visits);
       } catch (error) {
         console.error("Error loading visits:", error);
       }
     }
 
-    function renderVisits() {
-      const visitCount = document.getElementById("visitCount");
+    function renderLatest() {
+      const latest = visits.slice(0, 3);
       const latestList = document.getElementById("latestVisits");
-      const allList = document.getElementById("allVisits");
-      const sortOrderLabel = document.getElementById("sortOrder");
-
-      const sorted = newestFirst ? [...visits].reverse() : [...visits];
-      visitCount.innerText = visits.length;
-
-      // Latest 3 (always newest first)
-      const latest = [...visits].reverse().slice(0, 3);
-      latestList.innerHTML = latest.map(v => {
+      latestList.innerHTML = "";
+      latest.forEach(v => {
         const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return `<li>${emoji} ${v.churchName || "Unknown church"} (${v.visitDate || "No date"}) – ${v.location || "Unknown location"}</li>`;
-      }).join("");
-
-      // All visits (numbered)
-      allList.innerHTML = sorted.map((v, i) => {
-        return `<li><strong>${i + 1}.</strong> ${v.churchName || "Unknown church"} - ${v.visitDate || "No date"} (${v.location || "Unknown location"})</li>`;
-      }).join("");
-
-      sortOrderLabel.textContent = newestFirst ? "Newest → Oldest" : "Oldest → Newest";
+        const name = v.churchName || "Unknown church";
+        const date = v.visitDate ? `(${v.visitDate})` : "";
+        const loc = v.location || "Unknown location";
+        latestList.innerHTML += `<li>${emoji} ${name} ${date} – ${loc}</li>`;
+      });
     }
 
-    function toggleSort() {
-      newestFirst = !newestFirst;
-      renderVisits();
+    function renderAll(list) {
+      const allList = document.getElementById("allVisits");
+      allList.innerHTML = "";
+      list.forEach((v, i) => {
+        const name = v.churchName || "Unknown church";
+        const date = v.visitDate ? v.visitDate : "";
+        const loc = v.location || "Unknown location";
+        allList.innerHTML += `<li><strong>${i + 1}.</strong> ${name} ${date ? "- " + date : ""} (${loc})</li>`;
+      });
     }
+
+    document.getElementById("sortNewest").addEventListener("click", () => {
+      renderAll([...visits].reverse());
+    });
+
+    document.getElementById("sortOldest").addEventListener("click", () => {
+      renderAll([...visits].slice().reverse().reverse());
+    });
 
     document.getElementById("visitForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const churchName = document.getElementById("churchName").value.trim();
       const visitDate = document.getElementById("visitDate").value.trim();
       const location = document.getElementById("location").value.trim();
@@ -266,6 +281,7 @@
         alert("✅ Visit added!");
         document.getElementById("visitForm").reset();
         window.location.reload();
+
       } catch (error) {
         console.error(error);
         alert("❌ Error adding visit.");
